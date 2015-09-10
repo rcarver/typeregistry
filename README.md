@@ -30,7 +30,51 @@ name := registry.Add(&simpleThing{})
 thing := registry.New(name)
 ```
 
-See the example files for more details.
+See the example files for more detailed examples of marshal, unmarshal and custom setup.
+
+## Common Usage
+
+A common pattern for using this library is as a global handler to marshal/unmarshal a specific type. Here, implementations of a fictional `Conversation` type can be registered and then pulled in and out of storage formats. The package-level wrapper functions perform the typecasting needed to keep things simple for users.
+
+```golang
+package main
+
+import "github.com/rcarver/typeregistry"
+
+// Conversation is implemented many different ways.
+type Conversation interface {
+  Talk()
+}
+
+var registry = typeregistry.New()
+
+// Register adds a new type to the conversation registry.
+func Register(c Conversation) {
+	registry.Add(c)
+}
+
+// Marshal encodes the conversation, returning its registered name, and the
+// encoded bytes.
+func Marshal(c Conversation) (string, []byte, error) {
+	return registry.Marshal(c)
+}
+
+// ConvoDepsFunc is used to setup a conversation before it's unmarshaled.
+type ConvoDepsFunc func(Conversation)
+
+// Unmarshal decodes a conversation.
+func Unmarshal(name string, data []byte, deps ConvoDepsFunc) (Conversation, error) {
+	o, err := registry.Unmarshal(name, data, func(o interface{}) {
+		if deps != nil {
+			deps(o.(Conversation))
+		}
+	})
+	if err == nil {
+		return o.(Conversation), nil
+	}
+	return nil, err
+}
+```
 
 ## Author
 
