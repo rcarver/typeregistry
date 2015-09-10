@@ -45,12 +45,12 @@ func New() TypeRegistry {
 
 // Add puts a new type in the registry. If the type cannot be registered, it
 // panics. It returns the name that it was registered as.
-func (r TypeRegistry) Add(c interface{}) string {
-	if c == nil {
+func (r TypeRegistry) Add(o interface{}) string {
+	if o == nil {
 		panic("typeregistry cannot add nil")
 	}
-	name := r.name(c)
-	r[name] = reflect.TypeOf(c)
+	name := r.name(o)
+	r[name] = reflect.TypeOf(o)
 	return name
 }
 
@@ -69,13 +69,13 @@ func (r TypeRegistry) New(name string) interface{} {
 
 // Marshal encodes a type. If the type implements Marshaler or its bytes are
 // returned.
-func (r TypeRegistry) Marshal(c interface{}) (string, []byte, error) {
+func (r TypeRegistry) Marshal(o interface{}) (string, []byte, error) {
 	var (
-		name  = r.name(c)
+		name  = r.name(o)
 		bytes []byte
 		err   error
 	)
-	switch m := c.(type) {
+	switch m := o.(type) {
 	case Marshaler:
 		bytes, err = m.Marshal()
 	}
