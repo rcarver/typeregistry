@@ -13,19 +13,17 @@ for getting objects in and out of storage.
 To use, create a registry, then register add any types to it. Make sure to add
 the pointer receiver if that's what you want to instantiate.
 
-```golang
-# The type you'd like to instantiate by name.
-type simpleThing struct { }
+    # The type you'd like to instantiate by name.
+    type simpleThing struct { }
 
-# A registry.
-registry := typeregistry.New()
+    # A registry.
+    registry := typeregistry.New()
 
-// Register a type, this one by pointer receiver.
-name := registry.Add(&simpleThing{})
+    // Register a type, this one by pointer receiver.
+    name := registry.Add(&simpleThing{})
 
-# Get a *simpleThing
-thing := registry.New(name)
-```
+    # Get a *simpleThing
+    thing := registry.New(name)
 
 See the example files for more details.
 
