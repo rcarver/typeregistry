@@ -30,7 +30,7 @@ name := registry.Add(&simpleThing{})
 thing := registry.New(name)
 ```
 
-See the example files for more detailed examples of marshal, unmarshal and custom setup.
+See [this example file](example_unmarshal_test.go) for more detailed examples of marshal, unmarshal and custom setup.
 
 ## Common Usage
 
