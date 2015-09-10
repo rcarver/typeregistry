@@ -1,5 +1,7 @@
 # TypeRegistry
 
+[![Build Status](https://travis-ci.org/rcarver/typeregistry.svg)](https://travis-ci.org/rcarver/typeregistry)
+
 TypeRegistry is a generic system to instantiate arbitrary types by name. Since
 go cannot instantiate a type directly, we must first register any type that we
 would later like to instantiate. The registry handles these mechanics for you.
