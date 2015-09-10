@@ -4,28 +4,38 @@
 // mechanics for you.
 //
 // In addition, the registry supports marshal, unmarshal and dependency
-// injection patterns.
-
-// Marshaling an object results in the registered name of the type, plus byte
-// data if the type implements encoding.BinaryMarshaler or
-// encoding.TextMarshaler.
+// injection for getting objects in and out of storage.
 //
-// Unmarshal performs the reverse operation, first instantiating the type by
-// name, then using encoding.BinaryUnmarshaler or encoding.TextUnmarshaler to
-// populate the object (note that the type should probably be a pointer
-// reciever for this to be useful). If the object requires collaborators, or
-// data from the outside world then a function can be passed to Unmarshal that
-// receives the object after it's instantiated and before it's unmarshaled.
+// Marshaling an object results in the registered name of the type, plus byte
+// data if the type implements Marshaler.
+//
+// Unmarshaling performs the reverse operation, first instantiating the type by
+// name, then using Unmarshaler (if implemented) to populate the object (note
+// that the type should probably be a pointer reciever for this to be useful).
+// If the object requires collaborators, or data from the outside world then a
+// function can be passed to Unmarshal that receives the object after it's
+// instantiated and before it's unmarshaled.
 package typeregistry
 
 import (
-	"encoding"
 	"fmt"
 	"reflect"
 )
 
+// Marshaler is implemented by any type that can encode a copy of itself. The
+// style of encoding doesn't matter, it will only be seen by Unmarshaler.
+type Marshaler interface {
+	Marshal() ([]byte, error)
+}
+
+// Unmarshaler is implemented by any type that can decode of a copy of itself,
+// as returned by its Marshal method.
+type Unmarshaler interface {
+	Unmarshal([]byte) error
+}
+
 // TypeRegistry can instantiate, marshal, and unmarshal types from string names
-// and arbitrary encodings.
+// and type-defined encodings.
 type TypeRegistry map[string]reflect.Type
 
 // New initializes an empty TypeRegistry.
@@ -33,8 +43,8 @@ func New() TypeRegistry {
 	return make(TypeRegistry)
 }
 
-// Add includes a new type in the registry. If the type cannot be registered,
-// it panics. It returns the name that was registered.
+// Add puts a new type in the registry. If the type cannot be registered, it
+// panics. It returns the name that it was registered as.
 func (r TypeRegistry) Add(c interface{}) string {
 	if c == nil {
 		panic("typeregistry cannot add nil")
@@ -57,8 +67,8 @@ func (r TypeRegistry) New(name string) interface{} {
 	panic(fmt.Sprintf("typeregistry does not know %#v", name))
 }
 
-// Marshal encodes a type. If the type implements encoding.BinaryMarshaler or
-// encoding.TextMarshaler, its bytes are returned.
+// Marshal encodes a type. If the type implements Marshaler or its bytes are
+// returned.
 func (r TypeRegistry) Marshal(c interface{}) (string, []byte, error) {
 	var (
 		name  = r.name(c)
@@ -66,10 +76,8 @@ func (r TypeRegistry) Marshal(c interface{}) (string, []byte, error) {
 		err   error
 	)
 	switch m := c.(type) {
-	case encoding.BinaryMarshaler:
-		bytes, err = m.MarshalBinary()
-	case encoding.TextMarshaler:
-		bytes, err = m.MarshalText()
+	case Marshaler:
+		bytes, err = m.Marshal()
 	}
 	return name, bytes, err
 }
@@ -84,22 +92,17 @@ type DepsFunc func(interface{})
 // passing nil, but it's more descriptive so please do.
 var NoDeps = func(i interface{}) {}
 
-// Unmarshal decodes a type by name. If the type implements
-// encoding.BinaryUnmarshaler or encoding.TextUnmarshaler, the data is used to
-// unmarshal. DepsFunc can be passed to inject any other data into the type
-// before it is unmarshaled.
+// Unmarshal decodes a type by name. If the type implements Unmarshaler, the
+// data is used to unmarshal. DepsFunc can be passed to inject any other data
+// into the type before it is unmarshaled.
 func (r TypeRegistry) Unmarshal(name string, data []byte, deps DepsFunc) (interface{}, error) {
 	instance := r.New(name)
 	if deps != nil {
 		deps(instance)
 	}
 	switch m := instance.(type) {
-	case encoding.BinaryUnmarshaler:
-		if err := m.UnmarshalBinary(data); err != nil {
-			return instance, err
-		}
-	case encoding.TextUnmarshaler:
-		if err := m.UnmarshalText(data); err != nil {
+	case Unmarshaler:
+		if err := m.Unmarshal(data); err != nil {
 			return instance, err
 		}
 	}

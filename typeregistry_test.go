@@ -14,59 +14,31 @@ type nameType struct {
 	Name string
 }
 
-type marshalBinType struct {
+type marshalType struct {
 	Name string
 	Fail bool
 }
 
-func (m marshalBinType) MarshalBinary() ([]byte, error) {
+func (m marshalType) Marshal() ([]byte, error) {
 	if m.Fail {
 		return nil, fmt.Errorf("Failed")
 	}
 	return []byte("bin:" + m.Name), nil
 }
 
-type unmarshalBinType struct {
+type unmarshalType struct {
 	Name string
 }
 
-func (m *unmarshalBinType) UnmarshalBinary(data []byte) error {
+func (m *unmarshalType) Unmarshal(data []byte) error {
 	m.Name = "bin:" + string(data)
 	return nil
 }
 
-type unmarshalBinFailType struct {
+type unmarshalFailType struct {
 }
 
-func (m *unmarshalBinFailType) UnmarshalBinary(data []byte) error {
-	return fmt.Errorf("Failed")
-}
-
-type marshalTextType struct {
-	Name string
-	Fail bool
-}
-
-func (m marshalTextType) MarshalText() ([]byte, error) {
-	if m.Fail {
-		return nil, fmt.Errorf("Failed")
-	}
-	return []byte("text:" + m.Name), nil
-}
-
-type unmarshalTextType struct {
-	Name string
-}
-
-func (m *unmarshalTextType) UnmarshalText(data []byte) error {
-	m.Name = "bin:" + string(data)
-	return nil
-}
-
-type unmarshalTextFailType struct {
-}
-
-func (m *unmarshalTextFailType) UnmarshalText(data []byte) error {
+func (m *unmarshalFailType) Unmarshal(data []byte) error {
 	return fmt.Errorf("Failed")
 }
 
@@ -177,26 +149,14 @@ func TestTypeRegistry_Marshal(t *testing.T) {
 			err:   false,
 		},
 		{
-			marsh: marshalBinType{Name: "ok", Fail: false},
-			name:  "typeregistry.marshalBinType",
+			marsh: marshalType{Name: "ok", Fail: false},
+			name:  "typeregistry.marshalType",
 			val:   []byte("bin:ok"),
 			err:   false,
 		},
 		{
-			marsh: marshalBinType{Name: "ok", Fail: true},
-			name:  "typeregistry.marshalBinType",
-			val:   []byte{},
-			err:   true,
-		},
-		{
-			marsh: marshalTextType{Name: "ok", Fail: false},
-			name:  "typeregistry.marshalTextType",
-			val:   []byte("text:ok"),
-			err:   false,
-		},
-		{
-			marsh: marshalTextType{Name: "ok", Fail: true},
-			name:  "typeregistry.marshalTextType",
+			marsh: marshalType{Name: "ok", Fail: true},
+			name:  "typeregistry.marshalType",
 			val:   []byte{},
 			err:   true,
 		},
@@ -245,32 +205,18 @@ func TestTypeRegistry_Unmarshal(t *testing.T) {
 			want: &nothingType{},
 		},
 		{
-			t:    &unmarshalBinType{},
+			t:    &unmarshalType{},
 			data: []byte("ok"),
 			deps: NoDeps,
 			err:  false,
-			want: &unmarshalBinType{Name: "bin:ok"},
+			want: &unmarshalType{Name: "bin:ok"},
 		},
 		{
-			t:    &unmarshalBinFailType{},
+			t:    &unmarshalFailType{},
 			data: []byte("ok"),
 			deps: NoDeps,
 			err:  true,
-			want: &unmarshalBinFailType{},
-		},
-		{
-			t:    &unmarshalTextType{},
-			data: []byte("ok"),
-			deps: NoDeps,
-			err:  false,
-			want: &unmarshalTextType{Name: "bin:ok"},
-		},
-		{
-			t:    &unmarshalTextFailType{},
-			data: []byte("ok"),
-			deps: NoDeps,
-			err:  true,
-			want: &unmarshalTextFailType{},
+			want: &unmarshalFailType{},
 		},
 		{
 			t:    &nameType{},
