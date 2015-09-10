@@ -3,7 +3,7 @@ package typeregistry_test
 import (
 	"fmt"
 
-	"github.com/rcarver/typegregistry"
+	"github.com/rcarver/typeregistry"
 )
 
 type simpleThing struct {

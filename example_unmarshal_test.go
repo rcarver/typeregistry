@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/rcarver/typegregistry"
+	"github.com/rcarver/typeregistry"
 )
 
 // User is your typical user struct.
