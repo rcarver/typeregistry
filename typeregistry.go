@@ -1,9 +1,9 @@
-// Package typeregistry is a generic system to instantiate arbitrary types by
-// name. Since go cannot instantiate a type directly, we must first register
-// any type that we would later like to instantiate. The registry handles these
-// mechanics for you.
+// Package typeregistry is a generic system to instantiate types by name. Since
+// go cannot instantiate a type directly, we must first register any type that
+// we would later like to instantiate. The registry handles these mechanics for
+// you.
 //
-// In addition, the registry supports marshal, unmarshal and dependency
+// In addition, the registry supports marshal, unmarshal, and custom setup
 // injection for getting objects in and out of storage.
 //
 // Marshaling an object results in the registered name of the type, plus byte
@@ -82,23 +82,23 @@ func (r TypeRegistry) Marshal(c interface{}) (string, []byte, error) {
 	return name, bytes, err
 }
 
-// DepsFunc is passed to Unmarshal to manually manipulate the object after it's
-// instantiated, but before it's unmarshaled. This can be used to set
+// SetupFunc is passed to Unmarshal to manually manipulate the object after
+// it's instantiated, but before it's unmarshaled. This can be used to set
 // dependencies that are needed during unmarshal.  For example, to covert a
 // user's ID to a user object.
-type DepsFunc func(interface{})
+type SetupFunc func(interface{})
 
-// NoDeps is a DepsFunc that does nothing. It is functionally equivalent to
+// NoSetup is a SetupFunc that does nothing. It is functionally equivalent to
 // passing nil, but it's more descriptive so please do.
-var NoDeps = func(i interface{}) {}
+var NoSetup = func(i interface{}) {}
 
 // Unmarshal decodes a type by name. If the type implements Unmarshaler, the
-// data is used to unmarshal. DepsFunc can be passed to inject any other data
+// data is used to unmarshal. SetupFunc can be passed to inject any other data
 // into the type before it is unmarshaled.
-func (r TypeRegistry) Unmarshal(name string, data []byte, deps DepsFunc) (interface{}, error) {
+func (r TypeRegistry) Unmarshal(name string, data []byte, setup SetupFunc) (interface{}, error) {
 	instance := r.New(name)
-	if deps != nil {
-		deps(instance)
+	if setup != nil {
+		setup(instance)
 	}
 	switch m := instance.(type) {
 	case Unmarshaler:

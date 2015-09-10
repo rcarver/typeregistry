@@ -80,7 +80,7 @@ func ExampleTypeRegistry_Unmarshal() {
 		fmt.Printf("Sample marshaled name:%s data:%s\n", name, data)
 	}()
 
-	// Unmarshal it with dependency injection.
+	// Unmarshal it with custom setup.
 	func() {
 		si, err := registry.Unmarshal(name, data, func(o interface{}) {
 			if s, ok := o.(*userThing); ok {

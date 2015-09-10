@@ -3,12 +3,12 @@
 [![Build Status](https://travis-ci.org/rcarver/typeregistry.svg)](https://travis-ci.org/rcarver/typeregistry)
 [![GoDoc](https://godoc.org/github.com/rcarver/typeregistry?status.svg)](https://godoc.org/github.com/rcarver/typeregistry)
 
-TypeRegistry is a generic system to instantiate arbitrary types by name. Since
-go cannot instantiate a type directly, we must first register any type that we
-would later like to instantiate. The registry handles these mechanics for you.
+TypeRegistry is a generic system to instantiate types by name. Since go cannot
+instantiate a type directly, we must first register any type that we would
+later like to instantiate. The registry handles these mechanics for you.
 
-In addition, the registry supports marshal, unmarshal and dependency injection
-for getting objects in and out of storage.
+In addition, the registry supports marshal, unmarshal, and custom setup for
+getting objects in and out of storage.
 
 ## Example
 
@@ -59,14 +59,14 @@ func Marshal(c Conversation) (string, []byte, error) {
 	return registry.Marshal(c)
 }
 
-// ConvoDepsFunc is used to setup a conversation before it's unmarshaled.
-type ConvoDepsFunc func(Conversation)
+// ConvoSetupFunc is used to setup a conversation before it's unmarshaled.
+type ConvoSetupFunc func(Conversation)
 
 // Unmarshal decodes a conversation.
-func Unmarshal(name string, data []byte, deps ConvoDepsFunc) (Conversation, error) {
+func Unmarshal(name string, data []byte, setup ConvoSetupFunc) (Conversation, error) {
 	o, err := registry.Unmarshal(name, data, func(o interface{}) {
-		if deps != nil {
-			deps(o.(Conversation))
+		if setup != nil {
+			setup(o.(Conversation))
 		}
 	})
 	if err == nil {

@@ -184,44 +184,44 @@ func TestTypeRegistry_Marshal(t *testing.T) {
 
 func TestTypeRegistry_Unmarshal(t *testing.T) {
 	tests := []struct {
-		t    interface{}
-		data []byte
-		deps DepsFunc
-		err  bool
-		want interface{}
+		t     interface{}
+		data  []byte
+		setup SetupFunc
+		err   bool
+		want  interface{}
 	}{
 		{
-			t:    nothingType{},
-			data: []byte{},
-			deps: NoDeps,
-			err:  false,
-			want: nothingType{},
+			t:     nothingType{},
+			data:  []byte{},
+			setup: NoSetup,
+			err:   false,
+			want:  nothingType{},
 		},
 		{
-			t:    &nothingType{},
-			data: []byte{},
-			deps: NoDeps,
-			err:  false,
-			want: &nothingType{},
+			t:     &nothingType{},
+			data:  []byte{},
+			setup: NoSetup,
+			err:   false,
+			want:  &nothingType{},
 		},
 		{
-			t:    &unmarshalType{},
-			data: []byte("ok"),
-			deps: NoDeps,
-			err:  false,
-			want: &unmarshalType{Name: "bin:ok"},
+			t:     &unmarshalType{},
+			data:  []byte("ok"),
+			setup: NoSetup,
+			err:   false,
+			want:  &unmarshalType{Name: "bin:ok"},
 		},
 		{
-			t:    &unmarshalFailType{},
-			data: []byte("ok"),
-			deps: NoDeps,
-			err:  true,
-			want: &unmarshalFailType{},
+			t:     &unmarshalFailType{},
+			data:  []byte("ok"),
+			setup: NoSetup,
+			err:   true,
+			want:  &unmarshalFailType{},
 		},
 		{
 			t:    &nameType{},
 			data: []byte{},
-			deps: func(i interface{}) {
+			setup: func(i interface{}) {
 				if x, ok := i.(*nameType); ok {
 					x.Name = "ok"
 				}
@@ -233,7 +233,7 @@ func TestTypeRegistry_Unmarshal(t *testing.T) {
 	for i, test := range tests {
 		r := make(TypeRegistry)
 		name := r.Add(test.t)
-		got, err := r.Unmarshal(name, test.data, test.deps)
+		got, err := r.Unmarshal(name, test.data, test.setup)
 		if test.err {
 			if err == nil {
 				t.Errorf("%d Unmarshal wants error, got none", i)
